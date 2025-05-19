@@ -115,6 +115,6 @@ async def get_problem(contest_id: str, problem_id: str, force_refresh: bool = Fa
     raise HTTPException(status_code=404, detail=f"Contest {contest_id} not found")
 
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", port=8000, log_level="debug", reload=True)
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run("main:app", port=8000, log_level="debug", reload=True)
