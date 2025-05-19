@@ -30,6 +30,51 @@ class AtCoderScraper:
             return response.json()
         except Exception as e:
             raise ScraperException(f"Error making request to {url}: {str(e)}")
+        
+    def fetch_and_save_all(self):
+        """
+        Fetch all contests and their problems from AtCoder using the Kenkū API,
+        and save to local storage.
+        """
+        # Step 1: Get all contests
+        contests_url = f"{self.kenkoo_api}/contests/list"
+        contests_data = self._make_request(contests_url)
+        
+        contest_ids = set(contest['id'] for contest in contests_data if contest['start_epoch_second'] < datetime.now().timestamp())
+        logger.info(f"Found {len(contest_ids)} contests to fetch")
+
+        # Step 2: For each contest, get its problems
+        full_contests_data = []
+
+        for contest_id in sorted(contest_ids, reverse=True):
+            try:
+                problems_url = f"{self.kenkoo_api}/problems?contest={contest_id}"
+                problems_data = self._make_request(problems_url)
+                
+                contest_problems = []
+                for problem in problems_data:
+                    try:
+                        detail = self.get_problem_detail(problem['contest_id'], problem['problem_id'])
+                        contest_problems.append(detail.dict())
+                    except Exception as e:
+                        logger.warning(f"Failed to get details for {problem['problem_id']}: {str(e)}")
+                
+                full_contests_data.append({
+                    "id": contest_id,
+                    "problems": contest_problems
+                })
+            
+            except Exception as e:
+                logger.error(f"Failed to process contest {contest_id}: {str(e)}")
+
+        # Step 3: Save to file
+        storage_path = Path("storage")
+        storage_path.mkdir(exist_ok=True)
+        
+        with open(storage_path / "contests.json", "w", encoding="utf-8") as f:
+            json.dump(full_contests_data, f, ensure_ascii=False, indent=2)
+        
+        return full_contests_data
 
     def _make_html_request(self, url: str) -> str:
         try:
