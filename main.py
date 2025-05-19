@@ -30,6 +30,19 @@ def load_cached_data() -> List[Dict[str, Any]]:
     except FileNotFoundError:
         return []
 
+@app.get("/")
+def home():
+    return {
+        "message": "Welcome to AtCoder Scraper API",
+        "docs": "/docs",
+        "routes": {
+            "sync": "/sync?token=SECRET_TOKEN",
+            "all_contests": "/contests",
+            "contest": "/contests/{contest_id}",
+            "problem": "/contests/{contest_id}/problems/{problem_id}"
+        }
+    }
+
 @app.get("/sync")
 async def sync_data(force: bool = False):
     """
